@@ -87,7 +87,6 @@ class ImitationLearning(Agent):
         return ckpt
 
     def run_step(self, measurements, sensor_data, directions, target):
-
         control = self._compute_action(sensor_data['CameraRGB'].data,
                                        measurements.player_measurements.forward_speed, directions)
 
@@ -142,13 +141,19 @@ class ImitationLearning(Agent):
 
         speed = speed.reshape((1, 1))
 
+        control_input = 2
+        print("control_input: ", control_input)
         if control_input == 2 or control_input == 0.0:
+            print("going straight?")
             all_net = branches[0]
         elif control_input == 3:
+            print("left net?")
             all_net = branches[2]
         elif control_input == 4:
+            print("right net?")
             all_net = branches[3]
         else:
+            print("what's this net?")
             all_net = branches[1]
 
         feedDict = {x: image_input, input_speed: speed, dout: [1] * len(self.dropout_vec)}
@@ -176,5 +181,5 @@ class ImitationLearning(Agent):
                 predicted_brake = 0.0
 
                 predicted_acc = predicted_acc[0][0]
-
+        print("predicted_steers: ", predicted_steers)
         return predicted_steers, predicted_acc, predicted_brake
