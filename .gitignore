@@ -1,0 +1,9 @@
+*.pyc
+*.csv
+*.png
+*.txt
+CARLA/*
+!CARLA/PythonClient
+!CARLA/LICENSE
+imitation-learning-agent/_benchmarks_results/
+
