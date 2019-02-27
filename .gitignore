@@ -2,6 +2,8 @@
 *.csv
 *.png
 *.txt
+*.iml
+*.xml
 CARLA/*
 !CARLA/PythonClient
 !CARLA/LICENSE
