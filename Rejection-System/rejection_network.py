@@ -18,10 +18,9 @@ def bias_variable(shape, name):
 
 class Network(object):
 
-    def __init__(self, dropout, image_shape):
+    def __init__(self, image_shape):
         """ We put a few counters to see how many times we called each function """
-        self._dropout_vec = dropout
-        self._image_shape = image_shape
+        self._dropout_vec = [1.0] * 4 + [0.7] * 2 + [0.5] * 2 + [0.5] * 1 + [0.5, 1.] * 5
         self._amount_of_commands = 3 # [left, go straight, right]
         self._count_conv = 0
         self._count_pool = 0
@@ -29,12 +28,16 @@ class Network(object):
         self._count_activations = 0
         self._count_dropouts = 0
         self._count_fc = 0
-        self._count_lstm = 0
         self._count_soft_max = 0
         self._conv_kernels = []
         self._conv_strides = []
         self._weights = {}
         self._features = {}
+        self._learning_rate = 1e-3
+        """Variables to be communicated with outside"""
+        self.input_images = tf.placeholder("float", shape=[None, 88, 200, 3], name="input_images")
+        self.targets = tf.placehoder("float", shape=[None, self._amount_of_commands], name="targets")
+        self.TFgraph = tf.Graph()
 
     """ Our conv is currently using bias """
 
@@ -114,7 +117,7 @@ class Network(object):
         print(" === Final FC : ", output_size)
         with tf.name_scope("final fc"):
             x = self.fc(x, output_size)
-            return tf.nn.sigmoid(x)
+            return x
 
     def get_weigths_dict(self):
         return self._weights
@@ -123,48 +126,41 @@ class Network(object):
         return self._features
 
 
-def load_rejection_network(input_image, dropout):
+    def build_rejection_network(self):
+        network_manager = Network(tf.shape(self.input_images))
 
-    x = input_image
+        with self.TFgraph.as_default():
+            """conv1"""  # kernel sz, stride, num feature maps
+            xc = network_manager.conv_block(self.input_images, 5, 2, 32, padding_in='VALID')
+            print(xc)
+            xc = network_manager.conv_block(xc, 3, 1, 32, padding_in='VALID')
+            print(xc)
 
-    network_manager = Network(dropout, tf.shape(x))
+            """conv2"""
+            xc = network_manager.conv_block(xc, 3, 2, 64, padding_in='VALID')
+            print(xc)
+            xc = network_manager.conv_block(xc, 3, 1, 64, padding_in='VALID')
+            print(xc)
 
-    """conv1"""  # kernel sz, stride, num feature maps
-    xc = network_manager.conv_block(x, 5, 2, 32, padding_in='VALID')
-    print(xc)
-    xc = network_manager.conv_block(xc, 3, 1, 32, padding_in='VALID')
-    print(xc)
+            """ reshape """
+            x = tf.reshape(xc, [-1, int(np.prod(xc.get_shape()[1:]))], name='reshape')
+            print(x)
 
-    """conv2"""
-    xc = network_manager.conv_block(xc, 3, 2, 64, padding_in='VALID')
-    print(xc)
-    xc = network_manager.conv_block(xc, 3, 1, 64, padding_in='VALID')
-    print(xc)
+            """ fc1 """
+            x = network_manager.fc_block(x, 256)
+            print(x)
+            """ fc2 """
+            x = network_manager.fc_block(x, 128)
 
-    """conv3"""
-    xc = network_manager.conv_block(xc, 3, 2, 128, padding_in='VALID')
-    print(xc)
-    xc = network_manager.conv_block(xc, 3, 1, 128, padding_in='VALID')
-    print(xc)
+            """ final layer computing safety score for each command"""
+            safety_scores_logits = network_manager.fc_outputs(x, network_manager._amount_of_commands)
 
-    """conv4"""
-    xc = network_manager.conv_block(xc, 3, 1, 256, padding_in='VALID')
-    print(xc)
-    xc = network_manager.conv_block(xc, 3, 1, 256, padding_in='VALID')
-    print(xc)
-    """mp3 (default values)"""
+            """ Loss function"""
+            loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=self.targets, logits=safety_scores_logits, name="CE Loss"))
+            """ Train step"""
+            train_step = tf.train.AdamOptimizer(self._learning_rate).minimize(loss)
 
-    """ reshape """
-    x = tf.reshape(xc, [-1, int(np.prod(xc.get_shape()[1:]))], name='reshape')
-    print(x)
+            """ Final Safety Scores"""
+            safety_scores = tf.nn.sigmoid(safety_scores_logits)
 
-    """ fc1 """
-    x = network_manager.fc_block(x, 512)
-    print(x)
-    """ fc2 """
-    x = network_manager.fc_block(x, 512)
-
-    """ final layer computing safety score for each command"""
-    safety_scores = network_manager.fc_outputs(x, self._amount_of_commands)
-
-    return safety_scores
+        return self.TFgraph, self.input_images, self.targets, safety_scores, loss, train_step

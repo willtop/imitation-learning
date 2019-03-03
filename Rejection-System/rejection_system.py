@@ -16,56 +16,38 @@ class RejectionSystem():
 
     def __init__(self, avoid_stopping, memory_fraction=0.25, image_cut=[115, 510]):
 
-        self.dropout_vec = [1.0] * 8 + [0.7] * 2 + [0.5] * 2 + [0.5] * 1 + [0.5, 1.] * 5
-
-        config_gpu = tf.ConfigProto()
-
-        # GPU to be selected, just take zero , select GPU  with CUDA_VISIBLE_DEVICES
-
-        config_gpu.gpu_options.visible_device_list = '0'
-
-        config_gpu.gpu_options.per_process_gpu_memory_fraction = memory_fraction
-
-        self._image_size = (88, 200, 3)
-
-        self._sess = tf.Session(config=config_gpu)
-
-        with tf.device('/gpu:0'):
-            self._input_images = tf.placeholder("float", shape=[None, self._image_size[0],
-                                                                self._image_size[1],
-                                                                self._image_size[2]],
-                                                name="input_image")
-
-            self._dout = tf.placeholder("float", shape=[len(self.dropout_vec)])
-
-        with tf.name_scope("Rejection_Network"):
-            self._network_tensors = load_rejection_network(self._input_images, self._dout)
-
         import os
         dir_path = os.path.dirname(__file__)
+        self._model_path = dir_path + '/rejection_model/'
+        self._training_epoches = 50
 
-        self._models_path = dir_path + '/rejection_model/'
-
-        # tf.reset_default_graph()
-        self._sess.run(tf.global_variables_initializer())
-
-        self.load_model()
-
-        self._image_cut = image_cut
-
-    def train_model(self, images):
-
-
+    def train_model(self, images, targets):
+        TFgraph, images_placeholder, targets_placeholder, safety_scores, loss, train_step = load_rejection_network()
+        with TFgraph.as_default():
+            with tf.Session() as sess:
+                saver = tf.train.saver()
+                sess.run(tf.global_variables_initializer())
+                for i in range(self._training_epoches):
+                    _, train_loss = sess.run([train_step, loss], feed_dict={
+                        images_placeholder: images,
+                        targets_placeholder: targets
+                    })
+                    if(i%10==0):
+                        print("training avg CE loss: {}".format(train_loss))
+                saver.save(sess, self._model_path)
+                print("Trained model saved at {}!".format(self._model_path))
+        return
+    
     def load_model(self):
 
         variables_to_restore = tf.global_variables()
 
         saver = tf.train.Saver(variables_to_restore, max_to_keep=0)
 
-        if not os.path.exists(self._models_path):
+        if not os.path.exists(self._model_path):
             raise RuntimeError('failed to find the models path')
 
-        ckpt = tf.train.get_checkpoint_state(self._models_path)
+        ckpt = tf.train.get_checkpoint_state(self._model_path)
         if ckpt:
             print('Restoring from ', ckpt.model_checkpoint_path)
             saver.restore(self._sess, ckpt.model_checkpoint_path)
