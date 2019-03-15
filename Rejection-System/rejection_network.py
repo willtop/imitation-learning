@@ -34,9 +34,6 @@ class Network(object):
         self._weights = {}
         self._features = {}
         self._learning_rate = 1e-3
-        """Variables to be communicated with outside"""
-        self.input_images = tf.placeholder("float", shape=[None, 88, 200, 3], name="input_images")
-        self.targets = tf.placeholder("float", shape=[None, self._amount_of_commands], name="targets")
         self.TFgraph = tf.Graph()
 
     """ Our conv is currently using bias """
@@ -128,6 +125,9 @@ class Network(object):
 
     def build_rejection_network(self):
         with self.TFgraph.as_default():
+            self.input_images = tf.placeholder("float", shape=[None, 88, 200, 3], name="input_images")
+            self.targets = tf.placeholder("float", shape=[None, self._amount_of_commands], name="targets")
+
             """conv1"""  # kernel sz, stride, num feature maps
             xc = self.conv_block(self.input_images, 5, 2, 32, padding_in='VALID')
             print(xc)
