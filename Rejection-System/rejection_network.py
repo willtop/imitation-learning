@@ -155,8 +155,9 @@ class Network(object):
             """ final layer computing safety score for each command"""
             safety_scores_logits = network_manager.fc_outputs(x, network_manager._amount_of_commands)
 
-            """ Loss function"""
-            loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=self.targets, logits=safety_scores_logits, name="CE Loss"))
+            """ Loss function (Weighted Cross Entropy to Penalize Largely on False Negative)"""
+            loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(
+                targets=self.targets, logits=safety_scores_logits, pos_weight=5, name="Weighted CE Loss"))
             """ Train step"""
             train_step = tf.train.AdamOptimizer(self._learning_rate).minimize(loss)
 
