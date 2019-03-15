@@ -18,10 +18,10 @@ def bias_variable(shape, name):
 
 class Network(object):
 
-    def __init__(self, image_shape):
+    def __init__(self):
         """ We put a few counters to see how many times we called each function """
         self._dropout_vec = [1.0] * 4 + [0.7] * 2 + [0.5] * 2 + [0.5] * 1 + [0.5, 1.] * 5
-        self._amount_of_commands = 3 # [left, go straight, right]
+        self._amount_of_commands = 4 # [follow lane, left, right, go straight]
         self._count_conv = 0
         self._count_pool = 0
         self._count_bn = 0
@@ -36,7 +36,7 @@ class Network(object):
         self._learning_rate = 1e-3
         """Variables to be communicated with outside"""
         self.input_images = tf.placeholder("float", shape=[None, 88, 200, 3], name="input_images")
-        self.targets = tf.placehoder("float", shape=[None, self._amount_of_commands], name="targets")
+        self.targets = tf.placeholder("float", shape=[None, self._amount_of_commands], name="targets")
         self.TFgraph = tf.Graph()
 
     """ Our conv is currently using bias """
@@ -127,19 +127,17 @@ class Network(object):
 
 
     def build_rejection_network(self):
-        network_manager = Network(tf.shape(self.input_images))
-
         with self.TFgraph.as_default():
             """conv1"""  # kernel sz, stride, num feature maps
-            xc = network_manager.conv_block(self.input_images, 5, 2, 32, padding_in='VALID')
+            xc = self.conv_block(self.input_images, 5, 2, 32, padding_in='VALID')
             print(xc)
-            xc = network_manager.conv_block(xc, 3, 1, 32, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 1, 32, padding_in='VALID')
             print(xc)
 
             """conv2"""
-            xc = network_manager.conv_block(xc, 3, 2, 64, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 2, 64, padding_in='VALID')
             print(xc)
-            xc = network_manager.conv_block(xc, 3, 1, 64, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 1, 64, padding_in='VALID')
             print(xc)
 
             """ reshape """
@@ -147,13 +145,13 @@ class Network(object):
             print(x)
 
             """ fc1 """
-            x = network_manager.fc_block(x, 256)
+            x = self.fc_block(x, 256)
             print(x)
             """ fc2 """
-            x = network_manager.fc_block(x, 128)
+            x = self.fc_block(x, 128)
 
             """ final layer computing safety score for each command"""
-            safety_scores_logits = network_manager.fc_outputs(x, network_manager._amount_of_commands)
+            safety_scores_logits = self.fc_outputs(x, self._amount_of_commands)
 
             """ Loss function (Weighted Cross Entropy to Penalize Largely on False Negative)"""
             loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(
