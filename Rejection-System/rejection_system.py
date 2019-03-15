@@ -66,7 +66,7 @@ class RejectionSystem():
                             images_placeholder: train_images_batches[j],
                             targets_placeholder: train_commands_batches[j]
                         })
-                    if(i%10==0):
+                    if(i%1==0):
                         valid_loss = sess.run(loss, feed_dict={
                             images_placeholder: valid_images,
                             targets_placeholder: valid_commands

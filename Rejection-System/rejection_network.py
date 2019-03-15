@@ -112,7 +112,7 @@ class Network(object):
     # Final sigmoid layer predicting the safety score for each possible command
     def fc_outputs(self, x, output_size):
         print(" === Final FC : ", output_size)
-        with tf.name_scope("final fc"):
+        with tf.name_scope("final_fc"):
             x = self.fc(x, output_size)
             return x
 
