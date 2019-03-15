@@ -155,7 +155,7 @@ class Network(object):
 
             """ Loss function (Weighted Cross Entropy to Penalize Largely on False Negative)"""
             loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(
-                targets=self.targets, logits=safety_scores_logits, pos_weight=5, name="Weighted CE Loss"))
+                targets=self.targets, logits=safety_scores_logits, pos_weight=5, name="Weighted_CE_Loss"))
             """ Train step"""
             train_step = tf.train.AdamOptimizer(self._learning_rate).minimize(loss)
 
