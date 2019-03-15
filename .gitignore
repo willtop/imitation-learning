@@ -4,6 +4,8 @@
 *.txt
 *.iml
 *.xml
+*.h5
+*.npy
 CARLA/*
 !CARLA/PythonClient
 !CARLA/LICENSE

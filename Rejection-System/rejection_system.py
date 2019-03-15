@@ -21,6 +21,9 @@ class RejectionSystem():
         self._model_path = dir_path + '/rejection_model/'
         self._training_epoches = 50
 
+    def load_data(self):
+        train_dir = dir_path + "../Data/TrainSeq"
+
     def train_model(self, images, targets):
         TFgraph, images_placeholder, targets_placeholder, safety_scores, loss, train_step = load_rejection_network()
         with TFgraph.as_default():
@@ -37,7 +40,7 @@ class RejectionSystem():
                 saver.save(sess, self._model_path)
                 print("Trained model saved at {}!".format(self._model_path))
         return
-    
+
     def load_model(self):
 
         variables_to_restore = tf.global_variables()
