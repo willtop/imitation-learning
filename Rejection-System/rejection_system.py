@@ -56,7 +56,7 @@ class RejectionSystem():
         TFgraph, images_placeholder, targets_placeholder, safety_scores, loss, train_step = self._rejection_net.build_rejection_network()
         with TFgraph.as_default():
             with tf.Session() as sess:
-                saver = tf.train.saver()
+                saver = tf.train.Saver()
                 sess.run(tf.global_variables_initializer())
                 for i in range(1, self._training_epoches+1):
                     train_images_batches, train_commands_batches = self.prepare_training_batches(train_images,
