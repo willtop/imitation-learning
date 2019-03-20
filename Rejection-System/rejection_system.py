@@ -24,7 +24,7 @@ class RejectionSystem():
         # training setting
         self._train_data_amount = 10000 # Restricted by amount of training samples
         self._valid_data_amount = 1000
-        self._training_epoches = 50
+        self._training_epoches = 500
         self._minibatch_amount = 200
         self._rejection_net = rejection_network.Network()
 
@@ -65,20 +65,22 @@ class RejectionSystem():
                 saver = tf.train.Saver()
                 sess.run(tf.global_variables_initializer())
                 for i in range(1, self._training_epoches+1):
-                    train_images_batches, train_commands_batches = self.prepare_training_batches(train_images,
-                                                                                                 train_commands)
+                    train_images_batches, train_commands_batches = self.prepare_training_batches(train_images, train_commands)
+                    train_loss_avg = 0
                     for j in range(self._minibatch_amount):
                         _, train_loss = sess.run([train_step, loss], feed_dict={
                             images_placeholder: train_images_batches[j],
                             targets_placeholder: train_commands_batches[j]
                         })
-                    if(i%1==0):
+                        train_loss_avg += train_loss/self._minibatch_amount
+                        print("train loss: ", train_loss)
+                    if(i%10==0):
                         valid_loss = sess.run(loss, feed_dict={
                             images_placeholder: valid_images,
                             targets_placeholder: valid_commands
                         })
                         print("{}/{} Epoch. Avg Weighted CE: Train {} | Valid {}".format(
-                            i, self._training_epoches, train_loss, valid_loss))
+                            i, self._training_epoches, train_loss_avg, valid_loss))
                 saver.save(sess, self._model_path)
                 print("Trained model saved at {}!".format(self._model_path))
         return
