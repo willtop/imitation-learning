@@ -117,10 +117,10 @@ class Network(object):
             print(x)
 
             """ fc1 """
-            x = self.fc_block(x, 128)
+            x = self.fc_block(x, 64)
             print(x)
             """ fc2 """
-            x = self.fc_block(x, 128)
+            x = self.fc_block(x, 64)
 
             """ final layer computing safety score for each command"""
             safety_scores_logits = self.fc_outputs(x, self._amount_of_commands)
