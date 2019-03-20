@@ -91,7 +91,7 @@ class Network(object):
 
         return tf.nn.xw_plus_b(x, weights, bias, name='fc_' + str(self._count_fc))
 
-    def conv_block(self, x, kernel_size, stride, output_size, padding_in='SAME', whether_training):
+    def conv_block(self, x, kernel_size, stride, output_size, whether_training, padding_in='SAME'):
         print(" === Conv", self._count_conv, "  :  ", kernel_size, stride, output_size)
         with tf.name_scope("conv_block" + str(self._count_conv)):
             x = self.conv(x, kernel_size, stride, output_size, padding_in=padding_in)
@@ -129,15 +129,15 @@ class Network(object):
             whether_training = tf.placeholder(tf.bool, name="whether_it_is_training")
 
             """conv1"""  # kernel sz, stride, num feature maps
-            xc = self.conv_block(input_images, 5, 2, 32, padding_in='VALID', whether_training)
+            xc = self.conv_block(input_images, 5, 2, 32, whether_training, padding_in='VALID')
             print(xc)
-            xc = self.conv_block(xc, 3, 1, 32, padding_in='VALID', whether_training)
+            xc = self.conv_block(xc, 3, 1, 32, whether_training, padding_in='VALID')
             print(xc)
 
             """conv2"""
-            xc = self.conv_block(xc, 3, 2, 64, padding_in='VALID', whether_training)
+            xc = self.conv_block(xc, 3, 2, 64, whether_training, padding_in='VALID')
             print(xc)
-            xc = self.conv_block(xc, 3, 1, 64, padding_in='VALID', whether_training)
+            xc = self.conv_block(xc, 3, 1, 64, whether_training, padding_in='VALID')
             print(xc)
 
             """ reshape """
