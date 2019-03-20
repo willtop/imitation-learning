@@ -77,8 +77,8 @@ class Network(object):
         print("Dropout", self._count_dropouts)
         self._count_dropouts += 1
         output = tf.cond(whether_training,
-                         tf.nn.dropout(x, self._dropout_vec[self._count_dropouts - 1], name='dropout' + str(self._count_dropouts)),
-                         tf.nn.dropout(x, 1, name='dropout' + str(self._count_dropouts)))
+                         lambda: tf.nn.dropout(x, self._dropout_vec[self._count_dropouts - 1], name='dropout' + str(self._count_dropouts)),
+                         lambda: tf.nn.dropout(x, 1, name='dropout' + str(self._count_dropouts)))
         return output
 
     def fc(self, x, output_size):
