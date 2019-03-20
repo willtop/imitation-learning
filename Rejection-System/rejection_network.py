@@ -20,7 +20,6 @@ class Network(object):
 
     def __init__(self):
         """ We put a few counters to see how many times we called each function """
-        self._dropout_vec = [1.0] * 4 + [0.7] * 2 + [0.5] * 2 + [0.5] * 1 + [0.5, 1.] * 5
         self._amount_of_commands = 4 # [follow lane, left, right, go straight]
         self._count_conv = 0
         self._count_pool = 0
@@ -80,7 +79,6 @@ class Network(object):
         print(" === Conv", self._count_conv, "  :  ", kernel_size, stride, output_size)
         with tf.name_scope("conv_block" + str(self._count_conv)):
             x = self.conv(x, kernel_size, stride, output_size, padding_in=padding_in)
-
             return self.activation(x)
 
     def fc_block(self, x, output_size):
@@ -97,16 +95,9 @@ class Network(object):
             x = self.fc(x, output_size)
             return x
 
-    def get_weigths_dict(self):
-        return self._weights
-
-    def get_feat_tensors_dict(self):
-        return self._features
-
-
     def build_rejection_network(self):
         with self.TFgraph.as_default():
-            input_images = tf.placeholder(tf.float32, shape=[None, 88, 200, 3], name="input_images")
+            input_images = tf.placeholder(tf.float32, shape=[None, 70, 120, 3], name="input_images")
             targets = tf.placeholder(tf.float32, shape=[None, self._amount_of_commands], name="targets")
 
             """conv1"""  # kernel sz, stride, num feature maps

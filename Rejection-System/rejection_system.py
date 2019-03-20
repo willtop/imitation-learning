@@ -22,8 +22,8 @@ class RejectionSystem():
         self._valid_dir = self.dir_path + "Data/Valid/"
         self._amount_of_commands = 4 # [follow lane, left, right, go straight]
         # training setting
-        self._train_data_amount = 10000 # Restricted by amount of training samples
-        self._valid_data_amount = 1000
+        self._train_data_amount = 100000 # Restricted by amount of training samples
+        self._valid_data_amount = 5000
         self._training_epoches = 500
         self._minibatch_amount = 200
         self._rejection_net = rejection_network.Network()
