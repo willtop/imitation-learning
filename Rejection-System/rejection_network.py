@@ -50,7 +50,7 @@ class Network(object):
         self._weights['W_conv' + str(self._count_conv)] = weights
         self._conv_kernels.append(kernel_size)
         self._conv_strides.append(stride)
-
+        weights = tf.Print(weights, [weights[0]], summarize=10, message="net weights")
         conv_res = tf.add(tf.nn.conv2d(x, weights, [1, stride, stride, 1], padding=padding_in,
                                        name='conv2d_' + str(self._count_conv)), bias,
                           name='add_' + str(self._count_conv))
