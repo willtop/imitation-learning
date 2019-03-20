@@ -101,15 +101,15 @@ class Network(object):
             targets = tf.placeholder(tf.float32, shape=[None, self._amount_of_commands], name="targets")
 
             """conv1"""  # kernel sz, stride, num feature maps
-            xc = self.conv_block(input_images, 5, 2, 32, padding_in='VALID')
+            xc = self.conv_block(input_images, 5, 2, 16, padding_in='VALID')
             print(xc)
-            xc = self.conv_block(xc, 3, 1, 32, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 1, 16, padding_in='VALID')
             print(xc)
 
             """conv2"""
-            xc = self.conv_block(xc, 3, 2, 64, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 2, 32, padding_in='VALID')
             print(xc)
-            xc = self.conv_block(xc, 3, 1, 64, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 1, 32, padding_in='VALID')
             print(xc)
 
             """ reshape """
@@ -117,7 +117,7 @@ class Network(object):
             print(x)
 
             """ fc1 """
-            x = self.fc_block(x, 256)
+            x = self.fc_block(x, 128)
             print(x)
             """ fc2 """
             x = self.fc_block(x, 128)
