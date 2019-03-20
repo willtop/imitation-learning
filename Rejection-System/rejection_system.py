@@ -51,7 +51,7 @@ class RejectionSystem():
         return inputs_batches, targets_batches
 
     def train_model(self, train_images, train_commands, valid_images, valid_commands):
-        TFgraph, images_placeholder, targets_placeholder, safety_scores, loss, train_step = self._rejection_net.build_rejection_network()
+        TFgraph, images_placeholder, targets_placeholder, whether_training_placeholder, safety_scores, loss, train_step = self._rejection_net.build_rejection_network()
         with TFgraph.as_default():
             with tf.Session() as sess:
                 saver = tf.train.Saver()
@@ -62,17 +62,17 @@ class RejectionSystem():
                     for j in range(self._minibatch_amount):
                         _, train_loss, train_scores = sess.run([train_step, loss, safety_scores], feed_dict={
                             images_placeholder: train_images_batches[j],
-                            targets_placeholder: train_commands_batches[j]
+                            targets_placeholder: train_commands_batches[j],
+                            whether_training_placeholder: True
                         })
                         train_loss_avg += train_loss/self._minibatch_amount
                     valid_loss, valid_scores = sess.run([loss, safety_scores], feed_dict={
                         images_placeholder: valid_images,
-                        targets_placeholder: valid_commands
+                        targets_placeholder: valid_commands,
+                        whether_training_placeholder: False
                     })
                     print("{}/{} Epoch. Avg Weighted CE: Train {} | Valid {}".format(
                         i, self._training_epoches, train_loss_avg, valid_loss))
-                    print("train scores: {} | valid scores: {}".format(
-                        train_scores[100:110], valid_scores[100:110]  ))
                 saver.save(sess, self._model_path)
                 print("Trained model saved at {}!".format(self._model_path))
         return

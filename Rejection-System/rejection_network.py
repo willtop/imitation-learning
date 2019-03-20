@@ -20,9 +20,11 @@ class Network(object):
 
     def __init__(self):
         """ We put a few counters to see how many times we called each function """
+        self._dropout_vec = [1.0] * 4 + [0.7] * 2 + [0.5] * 2 + [0.5] * 1 + [0.5, 1.] * 5
         self._amount_of_commands = 4 # [follow lane, left, right, go straight]
         self._count_conv = 0
         self._count_pool = 0
+        self._count_bn = 0
         self._count_activations = 0
         self._count_dropouts = 0
         self._count_fc = 0
@@ -61,9 +63,23 @@ class Network(object):
         return tf.nn.max_pool(x, ksize=[1, ksize, ksize, 1], strides=[1, stride, stride, 1],
                               padding='SAME', name='max_pool' + str(self._count_pool))
 
+    def bn(self, x, whether_training):
+        self._count_bn += 1
+        return tf.contrib.layers.batch_norm(x, is_training=whether_training,
+                                            updates_collections=None,
+                                            scope='bn' + str(self._count_bn))
+
     def activation(self, x):
         self._count_activations += 1
         return tf.nn.relu(x, name='relu' + str(self._count_activations))
+
+    def dropout(self, x, whether_training):
+        print("Dropout", self._count_dropouts)
+        self._count_dropouts += 1
+        output = tf.cond(whether_training,
+                         lambda: tf.nn.dropout(x, self._dropout_vec[self._count_dropouts - 1], name='dropout' + str(self._count_dropouts)),
+                         lambda: tf.nn.dropout(x, 1, name='dropout' + str(self._count_dropouts)))
+        return output
 
     def fc(self, x, output_size):
         self._count_fc += 1
@@ -75,16 +91,20 @@ class Network(object):
 
         return tf.nn.xw_plus_b(x, weights, bias, name='fc_' + str(self._count_fc))
 
-    def conv_block(self, x, kernel_size, stride, output_size, padding_in='SAME'):
+    def conv_block(self, x, kernel_size, stride, output_size, whether_training, padding_in='SAME'):
         print(" === Conv", self._count_conv, "  :  ", kernel_size, stride, output_size)
         with tf.name_scope("conv_block" + str(self._count_conv)):
             x = self.conv(x, kernel_size, stride, output_size, padding_in=padding_in)
+            x = self.bn(x, whether_training)
+            x = self.dropout(x, whether_training)
+
             return self.activation(x)
 
-    def fc_block(self, x, output_size):
+    def fc_block(self, x, output_size, whether_training):
         print(" === FC", self._count_fc, "  :  ", output_size)
         with tf.name_scope("fc" + str(self._count_fc + 1)):
             x = self.fc(x, output_size)
+            x = self.dropout(x, whether_training)
             self._features['fc_block' + str(self._count_fc + 1)] = x
             return self.activation(x)
 
@@ -97,19 +117,20 @@ class Network(object):
 
     def build_rejection_network(self):
         with self.TFgraph.as_default():
-            input_images = tf.placeholder(tf.float32, shape=[None, 70, 120, 3], name="input_images")
+            input_images = tf.placeholder(tf.float32, shape=[None, 88, 200, 3], name="input_images")
             targets = tf.placeholder(tf.float32, shape=[None, self._amount_of_commands], name="targets")
+            whether_training = tf.placeholder(tf.bool, name="whether_it_is_training")
 
             """conv1"""  # kernel sz, stride, num feature maps
-            xc = self.conv_block(input_images, 5, 2, 16, padding_in='VALID')
+            xc = self.conv_block(input_images, 5, 2, 32, whether_training, padding_in='VALID')
             print(xc)
-            xc = self.conv_block(xc, 3, 1, 16, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 1, 32, whether_training, padding_in='VALID')
             print(xc)
 
             """conv2"""
-            xc = self.conv_block(xc, 3, 2, 32, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 2, 64, whether_training, padding_in='VALID')
             print(xc)
-            xc = self.conv_block(xc, 3, 1, 32, padding_in='VALID')
+            xc = self.conv_block(xc, 3, 1, 64, whether_training, padding_in='VALID')
             print(xc)
 
             """ reshape """
@@ -117,10 +138,10 @@ class Network(object):
             print(x)
 
             """ fc1 """
-            x = self.fc_block(x, 64)
+            x = self.fc_block(x, 256, whether_training)
             print(x)
             """ fc2 """
-            x = self.fc_block(x, 64)
+            x = self.fc_block(x, 128, whether_training)
 
             """ final layer computing safety score for each command"""
             safety_scores_logits = self.fc_outputs(x, self._amount_of_commands)
@@ -134,4 +155,4 @@ class Network(object):
             """ Final Safety Scores"""
             safety_scores = tf.nn.sigmoid(safety_scores_logits)
 
-        return self.TFgraph, input_images, targets, safety_scores, loss, train_step
+        return self.TFgraph, input_images, targets, whether_training, safety_scores, loss, train_step
