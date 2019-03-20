@@ -60,17 +60,19 @@ class RejectionSystem():
                     train_images_batches, train_commands_batches = self.prepare_training_batches(train_images, train_commands)
                     train_loss_avg = 0
                     for j in range(self._minibatch_amount):
-                        _, train_loss = sess.run([train_step, loss], feed_dict={
+                        _, train_loss, train_scores = sess.run([train_step, loss, safety_scores], feed_dict={
                             images_placeholder: train_images_batches[j],
                             targets_placeholder: train_commands_batches[j]
                         })
                         train_loss_avg += train_loss/self._minibatch_amount
-                    valid_loss = sess.run(loss, feed_dict={
+                    valid_loss, valid_scores = sess.run([loss, safety_scores], feed_dict={
                         images_placeholder: valid_images,
                         targets_placeholder: valid_commands
                     })
                     print("{}/{} Epoch. Avg Weighted CE: Train {} | Valid {}".format(
                         i, self._training_epoches, train_loss_avg, valid_loss))
+                    print("train scores: {} | valid scores: {}".format(
+                        train_scores[100:110], valid_scores[100:110]  ))
                 saver.save(sess, self._model_path)
                 print("Trained model saved at {}!".format(self._model_path))
         return
