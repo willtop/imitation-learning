@@ -22,30 +22,22 @@ class RejectionSystem():
         self._valid_dir = self.dir_path + "Data/Valid/"
         self._amount_of_commands = 4 # [follow lane, left, right, go straight]
         # training setting
-        self._train_data_amount = 100000 # Restricted by amount of training samples
-        self._valid_data_amount = 5000
         self._training_epoches = 500
-        self._minibatch_amount = 200
+        self._minibatch_amount = 500
         self._rejection_net = rejection_network.Network()
 
 
     def load_data(self):
         train_images = np.load(self._train_dir + "images.npy")
-        train_images = train_images[0:self._train_data_amount]
         train_commands = np.load(self._train_dir + "commands.npy")
-        train_commands = train_commands[0:self._train_data_amount]
         valid_images = np.load(self._valid_dir + "images.npy")
-        valid_images = valid_images[0:self._valid_data_amount]
         valid_commands = np.load(self._valid_dir + "commands.npy")
-        valid_commands = valid_commands[0:self._valid_data_amount]
         # Convert targets into one-hot format
-        assert np.shape(train_commands)==(self._train_data_amount, )
-        assert np.shape(valid_commands)==(self._valid_data_amount, )
         # Follow_lane: element 0; Left: element 1; Right: element 2; Straight: element 3
-        train_commands_onehot = np.zeros([self._train_data_amount, self._amount_of_commands])
-        train_commands_onehot[np.arange(self._train_data_amount), train_commands.astype(int)-2]=1
-        valid_commands_onehot = np.zeros([self._valid_data_amount, self._amount_of_commands])
-        valid_commands_onehot[np.arange(self._valid_data_amount), valid_commands.astype(int)-2] = 1
+        train_commands_onehot = np.zeros([np.size(train_commands), self._amount_of_commands])
+        train_commands_onehot[np.arange(np.size(train_commands)), train_commands.astype(int)-2]=1
+        valid_commands_onehot = np.zeros([np.size(valid_commands), self._amount_of_commands])
+        valid_commands_onehot[np.arange(np.size(valid_commands)), valid_commands.astype(int)-2] = 1
         return train_images, train_commands_onehot, valid_images, valid_commands_onehot
 
     def prepare_training_batches(self, inputs, targets):
