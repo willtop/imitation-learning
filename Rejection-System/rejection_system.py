@@ -73,8 +73,7 @@ class RejectionSystem():
                             targets_placeholder: train_commands_batches[j]
                         })
                         train_loss_avg += train_loss/self._minibatch_amount
-                        print("train loss: ", train_loss)
-                    if(i%10==0):
+                    if(i%1==0):
                         valid_loss = sess.run(loss, feed_dict={
                             images_placeholder: valid_images,
                             targets_placeholder: valid_commands
