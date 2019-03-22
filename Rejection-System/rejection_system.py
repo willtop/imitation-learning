@@ -16,7 +16,7 @@ class RejectionSystem():
 
     def __init__(self):
         import os
-        self.dir_path = os.path.dirname(__file__)
+        self.dir_path = os.path.dirname(os.path.abspath(__file__))
         self._model_path = self.dir_path + '/rejection_model/'
         self._train_dir = self.dir_path + "Data/Train/"
         self._valid_dir = self.dir_path + "Data/Valid/"

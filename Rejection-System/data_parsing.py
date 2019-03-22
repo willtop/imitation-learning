@@ -5,9 +5,9 @@ import os
 import h5py
 
 # Each file has 200 data points
-timeslot_interleaving = 4 # Take 50 data points from the 200 data points. One per 4 time frames
-Train_h5_file_amount = 2000
-Valid_h5_file_amount = 200
+timeslot_interleaving = 10 # Take 20 data points from the 200 data points. One per 4 time frames
+Train_h5_file_amount = 500
+Valid_h5_file_amount = 50
 
 def load_data_per_file(file_name):
     data = h5py.File(file_name, "r")
@@ -16,7 +16,7 @@ def load_data_per_file(file_name):
     target = np.array(data['targets'])
     assert np.shape(target) == (200, 28)
     # Crop the input images
-    image = image[:,9:79,40:160,:] # Dimension: 88X200->70X120
+    image = image[:,9:79,20:180,:] # Dimension: 88X200->70X120
     # only taking the directional command:
     target = target[:, 24]
     # time slots taken with interleaving
@@ -42,7 +42,7 @@ if(__name__=="__main__"):
         if((i+1)%50==0):
             print("Finished loading {}/{} files".format(i+1, Train_h5_file_amount))
     images = np.concatenate(images, axis=0)
-    assert np.shape(images) == (int(Train_h5_file_amount*200/timeslot_interleaving), 70, 120, 3)
+    assert np.shape(images) == (int(Train_h5_file_amount*200/timeslot_interleaving), IMAGE_HEIGHT, IMAGE_WIDTH, 3)
     targets = np.concatenate(targets)
     assert np.shape(targets) == (int(Train_h5_file_amount*200/timeslot_interleaving),)
     np.save(target_train_dir+"images.npy", images)
@@ -56,7 +56,7 @@ if(__name__=="__main__"):
         images.append(image)
         targets.append(target)
     images = np.concatenate(images, axis=0)
-    assert np.shape(images) == (int(Valid_h5_file_amount*200/timeslot_interleaving), 70, 120, 3)
+    assert np.shape(images) == (int(Valid_h5_file_amount*200/timeslot_interleaving), IMAGE_HEIGHT, IMAGE_WIDTH, 3)
     targets = np.concatenate(targets)
     assert np.shape(targets) == (int(Valid_h5_file_amount*200/timeslot_interleaving),)
     np.save(target_valid_dir + "images.npy", images)

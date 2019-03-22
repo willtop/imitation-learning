@@ -117,7 +117,7 @@ class Network(object):
 
     def build_rejection_network(self):
         with self.TFgraph.as_default():
-            input_images = tf.placeholder(tf.float32, shape=[None, 70, 120, 3], name="input_images")
+            input_images = tf.placeholder(tf.float32, shape=[None, IMAGE_HEIGHT, IMAGE_WIDTH, 3], name="input_images")
             targets = tf.placeholder(tf.float32, shape=[None, self._amount_of_commands], name="targets")
             whether_training = tf.placeholder(tf.bool, name="whether_it_is_training")
 
