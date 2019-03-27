@@ -1,17 +1,16 @@
 import numpy as np
 from scipy.misc import imsave
 import os
-import local_settings
+from local_settings import *
 
-# TYPE = "TRAIN"
-TYPE = "VALID"
+TYPE = "TRAIN"
+# TYPE = "VALID"
 
 if(__name__=="__main__"):
-    main_dir = os.path.dirname(os.path.realpath(__file__))
     if(TYPE=="TRAIN"):
-        data_dir = main_dir + "/Data/Train/"
+        data_dir = "Data/Train/"
     else:
-        data_dir = main_dir + "/Data/Valid/"
+        data_dir = "Data/Valid/"
     print("loading image npy file from {}...".format(data_dir))
     images = np.load(data_dir+"images.npy")
     images_amount = np.shape(images)[0]

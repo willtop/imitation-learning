@@ -4,6 +4,7 @@
 *.txt
 *.iml
 *.xml
+*.zip
 *.h5
 *.npy
 CARLA/*

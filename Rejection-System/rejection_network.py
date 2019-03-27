@@ -1,8 +1,7 @@
 from __future__ import print_function
-
 import numpy as np
-
 import tensorflow as tf
+from local_settings import *
 
 
 def weight_xavi_init(shape, name):
