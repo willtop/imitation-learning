@@ -4,10 +4,12 @@
 *.txt
 *.iml
 *.xml
+*.zip
 *.h5
 *.npy
 CARLA/*
 !CARLA/PythonClient
 !CARLA/LICENSE
 imitation-learning-agent/_benchmarks_results/
-
+*train_tags_processed.json
+*valid_tags_processed.json

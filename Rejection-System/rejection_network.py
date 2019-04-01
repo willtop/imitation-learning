@@ -1,8 +1,7 @@
 from __future__ import print_function
-
 import numpy as np
-
 import tensorflow as tf
+from local_settings import *
 
 
 def weight_xavi_init(shape, name):
@@ -21,7 +20,7 @@ class Network(object):
     def __init__(self):
         """ We put a few counters to see how many times we called each function """
         self._dropout_vec = [1.0] * 4 + [0.7] * 2 + [0.5] * 2 + [0.5] * 1 + [0.5, 1.] * 5
-        self._amount_of_commands = 4 # [follow lane, left, right, go straight]
+        self._amount_of_commands = 3 # [left, straight, right]
         self._count_conv = 0
         self._count_pool = 0
         self._count_bn = 0
@@ -33,7 +32,7 @@ class Network(object):
         self._conv_strides = []
         self._weights = {}
         self._features = {}
-        self._learning_rate = 1e-3
+        self._learning_rate = 1e-4
         self.TFgraph = tf.Graph()
 
     """ Our conv is currently using bias """
@@ -109,10 +108,10 @@ class Network(object):
             return self.activation(x)
 
     # Final sigmoid layer predicting the safety score for each possible command
-    def fc_outputs(self, x, output_size):
-        print(" === Final FC : ", output_size)
+    def fc_outputs(self, x):
+        print(" === Final FC : ", self._amount_of_commands)
         with tf.name_scope("final_fc"):
-            x = self.fc(x, output_size)
+            x = self.fc(x, self._amount_of_commands)
             return x
 
     def build_rejection_network(self):
@@ -138,17 +137,17 @@ class Network(object):
             print(x)
 
             """ fc1 """
-            x = self.fc_block(x, 256, whether_training)
+            x = self.fc_block(x, 128, whether_training)
             print(x)
             """ fc2 """
-            x = self.fc_block(x, 128, whether_training)
+            x = self.fc_block(x, 64, whether_training)
 
             """ final layer computing safety score for each command"""
-            safety_scores_logits = self.fc_outputs(x, self._amount_of_commands)
+            safety_scores_logits = self.fc_outputs(x)
 
             """ Loss function (Weighted Cross Entropy to Penalize Largely on False Negative)"""
-            loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(
-                targets=targets, logits=safety_scores_logits, pos_weight=5, name="Weighted_CE_Loss"))
+            loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+                labels=targets, logits=safety_scores_logits, name="Vanilla_CE_Loss"))
             """ Train step"""
             train_step = tf.train.AdamOptimizer(self._learning_rate).minimize(loss)
 

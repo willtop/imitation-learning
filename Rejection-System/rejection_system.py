@@ -1,44 +1,31 @@
 from __future__ import print_function
 
 import os
-
-import scipy
-
 import tensorflow as tf
 import numpy as np
-
-slim = tf.contrib.slim
-
 import rejection_network
 
 
 class RejectionSystem():
 
     def __init__(self):
-        import os
         self.dir_path = os.path.dirname(os.path.abspath(__file__))
         self._model_path = self.dir_path + '/rejection_model/'
-        self._train_dir = self.dir_path + "Data/Train/"
-        self._valid_dir = self.dir_path + "Data/Valid/"
+        self._train_dir = self.dir_path + "/Data/Train/"
+        self._valid_dir = self.dir_path + "/Data/Valid/"
         self._amount_of_commands = 4 # [follow lane, left, right, go straight]
         # training setting
         self._training_epoches = 500
-        self._minibatch_amount = 500
+        self._number_of_minibatches = 50
         self._rejection_net = rejection_network.Network()
 
 
     def load_data(self):
-        train_images = np.load(self._train_dir + "images.npy")
-        train_commands = np.load(self._train_dir + "commands.npy")
-        valid_images = np.load(self._valid_dir + "images.npy")
-        valid_commands = np.load(self._valid_dir + "commands.npy")
-        # Convert targets into one-hot format
-        # Follow_lane: element 0; Left: element 1; Right: element 2; Straight: element 3
-        train_commands_onehot = np.zeros([np.size(train_commands), self._amount_of_commands])
-        train_commands_onehot[np.arange(np.size(train_commands)), train_commands.astype(int)-2]=1
-        valid_commands_onehot = np.zeros([np.size(valid_commands), self._amount_of_commands])
-        valid_commands_onehot[np.arange(np.size(valid_commands)), valid_commands.astype(int)-2] = 1
-        return train_images, train_commands_onehot, valid_images, valid_commands_onehot
+        train_images = np.load(self._train_dir + "train_images.npy")
+        train_targets = np.load(self._train_dir + "train_targets.npy")
+        valid_images = np.load(self._valid_dir + "valid_images.npy")
+        valid_targets = np.load(self._valid_dir + "valid_targets.npy")
+        return train_images, train_targets, valid_images, valid_targets
 
     def prepare_training_batches(self, inputs, targets):
         data_amount = np.shape(targets)[0]
@@ -46,29 +33,29 @@ class RejectionSystem():
         np.random.shuffle(perm)
         inputs = inputs[perm]
         targets = targets[perm]
-        inputs_batches = np.split(inputs, self._minibatch_amount)
-        targets_batches = np.split(targets, self._minibatch_amount)
+        inputs_batches = np.split(inputs, self._number_of_minibatches)
+        targets_batches = np.split(targets, self._number_of_minibatches)
         return inputs_batches, targets_batches
 
-    def train_model(self, train_images, train_commands, valid_images, valid_commands):
+    def train_model(self, train_images, train_targets, valid_images, valid_targets):
         TFgraph, images_placeholder, targets_placeholder, whether_training_placeholder, safety_scores, loss, train_step = self._rejection_net.build_rejection_network()
         with TFgraph.as_default():
             with tf.Session() as sess:
                 saver = tf.train.Saver()
                 sess.run(tf.global_variables_initializer())
                 for i in range(1, self._training_epoches+1):
-                    train_images_batches, train_commands_batches = self.prepare_training_batches(train_images, train_commands)
+                    train_images_batches, train_targets_batches = self.prepare_training_batches(train_images, train_targets)
                     train_loss_avg = 0
-                    for j in range(self._minibatch_amount):
+                    for j in range(self._number_of_minibatches):
                         _, train_loss, train_scores = sess.run([train_step, loss, safety_scores], feed_dict={
                             images_placeholder: train_images_batches[j],
-                            targets_placeholder: train_commands_batches[j],
+                            targets_placeholder: train_targets_batches[j],
                             whether_training_placeholder: True
                         })
-                        train_loss_avg += train_loss/self._minibatch_amount
+                        train_loss_avg += train_loss/self._number_of_minibatches
                     valid_loss, valid_scores = sess.run([loss, safety_scores], feed_dict={
                         images_placeholder: valid_images,
-                        targets_placeholder: valid_commands,
+                        targets_placeholder: valid_targets,
                         whether_training_placeholder: False
                     })
                     print("{}/{} Epoch. Avg Weighted CE: Train {} | Valid {}".format(
