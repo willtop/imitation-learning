@@ -3,8 +3,8 @@ from scipy.misc import imsave
 import os
 from local_settings import *
 
-TYPE = "TRAIN"
-# TYPE = "VALID"
+# TYPE = "TRAIN"
+TYPE = "VALID"
 
 if(__name__=="__main__"):
     if(TYPE=="TRAIN"):
