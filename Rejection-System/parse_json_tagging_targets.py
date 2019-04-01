@@ -1,8 +1,8 @@
 import numpy as np
 import json
 
-TYPE = "TRAIN"
-# TYPE = "VALID"
+# TYPE = "TRAIN"
+TYPE = "VALID"
 
 if(__name__=="__main__"):
     if (TYPE == "TRAIN"):
@@ -22,7 +22,7 @@ if(__name__=="__main__"):
                 line = line.rstrip("\n")
                 if(i==1): # first line, add start of array bracket
                     line = "["+line
-                if(i==5000): # last line, close the bracket for the array
+                if(i==number_of_images): # last line, close the bracket for the array
                     line += "]"
                 else: # add comma separating elements within the array
                     line += ","
@@ -41,11 +41,11 @@ if(__name__=="__main__"):
         assert np.sum(all_labels[image_index])==0 # ensure no repetitive labelling
         # obtain tagging targets
         tags = record['annotation']['labels']
-        if('left' in tags):
+        if('left' in tags or 'Left' in tags):
             all_labels[image_index][0] = 1
-        if('straight' in tags):
+        if('straight' in tags or 'Straight' in tags):
             all_labels[image_index][1] = 1
-        if('right' in tags):
+        if('right' in tags or 'Right' in tags):
             all_labels[image_index][2] = 1
     print("# tagged: left: {}; straight: {}; right: {}".format(
         np.sum(all_labels[:,0]), np.sum(all_labels[:,1]), np.sum(all_labels[:,2])))
