@@ -12,7 +12,7 @@ if(__name__=="__main__"):
     else:
         data_dir = "Data/Valid/"
     print("loading image npy file from {}...".format(data_dir))
-    images = np.load(data_dir+"images.npy")
+    images = np.load(data_dir+"train_images.npy")
     images_amount = np.shape(images)[0]
     for i in range(images_amount):
         image = images[i]

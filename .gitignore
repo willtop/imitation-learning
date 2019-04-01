@@ -11,4 +11,4 @@ CARLA/*
 !CARLA/PythonClient
 !CARLA/LICENSE
 imitation-learning-agent/_benchmarks_results/
-
+*train_tags_processed.json
