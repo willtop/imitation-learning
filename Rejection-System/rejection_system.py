@@ -8,8 +8,8 @@ class RejectionSystem():
 
     def __init__(self):
         self.dir_path = os.path.dirname(os.path.abspath(__file__))
-        self._train_dir = self.dir_path + "/Data/Train/"
-        self._valid_dir = self.dir_path + "/Data/Valid/"
+        self._train_dir = os.path.join(self.dir_path, "Data/Train/")
+        self._valid_dir = os.path.join(self.dir_path, "Data/Valid/")
         # training setting
         self._training_epoches = 100
         self._number_of_minibatches = 20
