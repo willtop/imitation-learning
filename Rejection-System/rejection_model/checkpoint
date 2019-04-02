@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/will/imitation-learning/Rejection-System/rejection_model/rejection_model.ckpt"
+all_model_checkpoint_paths: "/home/will/imitation-learning/Rejection-System/rejection_model/rejection_model.ckpt"
