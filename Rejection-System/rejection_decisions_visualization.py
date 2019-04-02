@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import rejection_network
+from local_settings import *
 
 
 def visualize_commands(images, commands):
@@ -18,14 +19,15 @@ def visualize_commands(images, commands):
             plt.arrow(IMAGE_WIDTH/2,IMAGE_HEIGHT-10,0,-10,width=1,color='green')
         if(command[2]==1): # can turn right
             plt.arrow(IMAGE_WIDTH/2+10,IMAGE_HEIGHT-10,10,0,width=1,color='green')
-        plt.pause(2)
+        plt.pause(0.5)
+        plt.clf()
         if((i+1)%10==0):
             print("Showed {}/{} images".format(i+1, number_of_images))
     return
 
 def load_data_for_inference():
     valid_images = np.load(os.path.dirname(os.path.abspath(__file__)) + "/Data/Valid/valid_images.npy")
-    valid_targets = np.load(os.path.abspath(__file__)) + "/Data/Valid/valid_targets.npy")
+    valid_targets = np.load(os.path.dirname(os.path.abspath(__file__)) + "/Data/Valid/valid_targets.npy")
     return valid_images, valid_targets
 
 
@@ -46,6 +48,7 @@ def model_inference(valid_images, valid_targets):
     # Convert to binary acceptable commands
     acceptable_commands = (safety_scores>=0.5).astype(int)
     assert np.shape(acceptable_commands)==(np.shape(valid_images)[0], rejection_net.number_of_commands)
+    print("Obtained rejection network's inference results!")
     return acceptable_commands
 
 if(__name__=="__main__"):

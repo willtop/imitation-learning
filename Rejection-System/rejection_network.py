@@ -35,7 +35,7 @@ class Network(object):
         self._learning_rate = 1e-4
         self.TFgraph = tf.Graph()
         self.dir_path = os.path.dirname(os.path.abspath(__file__))
-        self.model_doc = self.dir_path + '/rejection_model/rejection_model.ckpt'
+        self.model_loc = self.dir_path + '/rejection_model/rejection_model.ckpt'
 
     """ Our conv is currently using bias """
 
