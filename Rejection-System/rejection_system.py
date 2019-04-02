@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import tensorflow as tf
 import numpy as np
@@ -10,7 +8,6 @@ class RejectionSystem():
 
     def __init__(self):
         self.dir_path = os.path.dirname(os.path.abspath(__file__))
-        self._model_loc = self.dir_path + '/rejection_model/rejection_model.ckpt'
         self._train_dir = self.dir_path + "/Data/Train/"
         self._valid_dir = self.dir_path + "/Data/Valid/"
         # training setting
@@ -40,6 +37,7 @@ class RejectionSystem():
 
     def train_model(self, train_images, train_targets, valid_images, valid_targets):
         TFgraph, images_placeholder, targets_placeholder, whether_training_placeholder, safety_scores, loss, train_step = self._rejection_net.build_rejection_network()
+        model_loc = self._rejection_net.model_loc
         with TFgraph.as_default():
             with tf.Session() as sess:
                 saver = tf.train.Saver()
@@ -47,8 +45,8 @@ class RejectionSystem():
                     print("Initialize parameters and train from scratch...")
                     sess.run(tf.global_variables_initializer())
                 else:
-                    print("Resume training on model loaded from {}...".format(self._model_loc))
-                    saver.restore(sess, self._model_loc)
+                    print("Resume training on model loaded from {}...".format(model_loc))
+                    saver.restore(sess, model_loc)
                 for i in range(1, self._training_epoches+1):
                     train_images_batches, train_targets_batches = self.prepare_training_batches(train_images, train_targets)
                     train_loss_avg = 0
@@ -67,8 +65,8 @@ class RejectionSystem():
                     if(self._debug):
                         print(valid_scores)
                     print("{}/{} Epoch. Avg CE: Train {} | Valid {}".format(i, self._training_epoches, train_loss_avg, valid_loss))
-                    saver.save(sess, self._model_loc)
-                    print("Trained model saved at {}!".format(self._model_loc))
+                    saver.save(sess, model_loc)
+                    print("Trained model saved at {}!".format(model_loc))
         return
 
 if(__name__=="__main__"):

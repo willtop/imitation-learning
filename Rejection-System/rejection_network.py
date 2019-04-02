@@ -1,4 +1,4 @@
-from __future__ import print_function
+import os
 import numpy as np
 import tensorflow as tf
 from local_settings import *
@@ -20,7 +20,7 @@ class Network(object):
     def __init__(self):
         """ We put a few counters to see how many times we called each function """
         self._dropout_vec = [1.0] * 4 + [0.7] * 2 + [0.5] * 2 + [0.5] * 1 + [0.5, 1.] * 5
-        self._amount_of_commands = 3 # [left, straight, right]
+        self.number_of_commands = 3 # [left, straight, right]
         self._count_conv = 0
         self._count_pool = 0
         self._count_bn = 0
@@ -34,6 +34,8 @@ class Network(object):
         self._features = {}
         self._learning_rate = 1e-4
         self.TFgraph = tf.Graph()
+        self.dir_path = os.path.dirname(os.path.abspath(__file__))
+        self.model_doc = self.dir_path + '/rejection_model/rejection_model.ckpt'
 
     """ Our conv is currently using bias """
 
@@ -109,15 +111,15 @@ class Network(object):
 
     # Final sigmoid layer predicting the safety score for each possible command
     def fc_outputs(self, x):
-        print(" === Final FC : ", self._amount_of_commands)
+        print(" === Final FC : ", self.number_of_commands)
         with tf.name_scope("final_fc"):
-            x = self.fc(x, self._amount_of_commands)
+            x = self.fc(x, self.number_of_commands)
             return x
 
     def build_rejection_network(self):
         with self.TFgraph.as_default():
             input_images = tf.placeholder(tf.float32, shape=[None, IMAGE_HEIGHT, IMAGE_WIDTH, 3], name="input_images")
-            targets = tf.placeholder(tf.float32, shape=[None, self._amount_of_commands], name="targets")
+            targets = tf.placeholder(tf.float32, shape=[None, self.number_of_commands], name="targets")
             whether_training = tf.placeholder(tf.bool, name="whether_it_is_training")
 
             """conv1"""  # kernel sz, stride, num feature maps
