@@ -1,10 +1,29 @@
 import os
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
 import rejection_network
 
 
-def load_data_for_inference(self):
+def visualize_commands(images, commands):
+    number_of_images = np.shape(images)[0]
+    for i in range(number_of_images):
+        img = images[i]
+        command = commands[i]
+        assert np.shape(command)==(3,)
+        plt.imshow(img)
+        if(command[0]==1): # can turn left
+            plt.arrow(IMAGE_WIDTH/2-10,IMAGE_HEIGHT-10,-10,0,width=1,color='green')
+        if(command[1]==1): # can go straight
+            plt.arrow(IMAGE_WIDTH/2,IMAGE_HEIGHT-10,0,-10,width=1,color='green')
+        if(command[2]==1): # can turn right
+            plt.arrow(IMAGE_WIDTH/2+10,IMAGE_HEIGHT-10,10,0,width=1,color='green')
+        plt.pause(2)
+        if((i+1)%10==0):
+            print("Showed {}/{} images".format(i+1, number_of_images))
+    return
+
+def load_data_for_inference():
     valid_images = np.load(os.path.dirname(os.path.abspath(__file__)) + "/Data/Valid/valid_images.npy")
     valid_targets = np.load(os.path.abspath(__file__)) + "/Data/Valid/valid_targets.npy")
     return valid_images, valid_targets
@@ -33,5 +52,5 @@ if(__name__=="__main__"):
     valid_images, valid_targets = load_data_for_inference()
     print("Data Loading Completed!")
     valid_commands = model_inference(valid_images, valid_targets)
-    
+    visualize_commands(valid_images, valid_commands)
     print("Script finished successfully!")
