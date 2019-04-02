@@ -137,7 +137,7 @@ class Network(object):
             print(x)
 
             """ fc1 """
-            x = self.fc_block(x, 128, whether_training)
+            x = self.fc_block(x, 64, whether_training)
             print(x)
             """ fc2 """
             x = self.fc_block(x, 64, whether_training)

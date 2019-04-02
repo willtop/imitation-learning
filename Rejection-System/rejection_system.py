@@ -10,14 +10,15 @@ class RejectionSystem():
 
     def __init__(self):
         self.dir_path = os.path.dirname(os.path.abspath(__file__))
-        self._model_path = self.dir_path + '/rejection_model/'
+        self._model_loc = self.dir_path + '/rejection_model/rejection_model.ckpt'
         self._train_dir = self.dir_path + "/Data/Train/"
         self._valid_dir = self.dir_path + "/Data/Valid/"
-        self._amount_of_commands = 4 # [follow lane, left, right, go straight]
         # training setting
-        self._training_epoches = 500
-        self._number_of_minibatches = 50
+        self._training_epoches = 100
+        self._number_of_minibatches = 20
         self._rejection_net = rejection_network.Network()
+        self._initialize_training = True
+        self._debug = False
 
 
     def load_data(self):
@@ -42,7 +43,12 @@ class RejectionSystem():
         with TFgraph.as_default():
             with tf.Session() as sess:
                 saver = tf.train.Saver()
-                sess.run(tf.global_variables_initializer())
+                if(self._initialize_training):
+                    print("Initialize parameters and train from scratch...")
+                    sess.run(tf.global_variables_initializer())
+                else:
+                    print("Resume training on model loaded from {}...".format(self._model_loc))
+                    saver.restore(sess, self._model_loc)
                 for i in range(1, self._training_epoches+1):
                     train_images_batches, train_targets_batches = self.prepare_training_batches(train_images, train_targets)
                     train_loss_avg = 0
@@ -58,10 +64,11 @@ class RejectionSystem():
                         targets_placeholder: valid_targets,
                         whether_training_placeholder: False
                     })
-                    print("{}/{} Epoch. Avg Weighted CE: Train {} | Valid {}".format(
-                        i, self._training_epoches, train_loss_avg, valid_loss))
-                saver.save(sess, self._model_path)
-                print("Trained model saved at {}!".format(self._model_path))
+                    if(self._debug):
+                        print(valid_scores)
+                    print("{}/{} Epoch. Avg CE: Train {} | Valid {}".format(i, self._training_epoches, train_loss_avg, valid_loss))
+                    saver.save(sess, self._model_loc)
+                    print("Trained model saved at {}!".format(self._model_loc))
         return
 
 if(__name__=="__main__"):
